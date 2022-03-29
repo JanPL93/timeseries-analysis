@@ -67,6 +67,19 @@ print("Number of .h5 files detected: ", h5_list_len)
 #name output
 output_name = input('Name the .tif output prefix: ')
 
+#slice z series
+z_start = None
+z_end = None
+slice_yn = input("Slice the Z series? y/n :")
+
+if slice_yn == 'y':
+    z_start = int(input("Type the start Z plane: "))
+    z_end = int(input("Type the end Z plane: "))
+elif slice_yn == 'n':
+    pass
+else:
+    print("Invalid input for slicing; defaulting to Z projecting full stack.")
+
 #keep track of time taken to create projecton
 seconds_per_frame = []
 
@@ -76,7 +89,10 @@ def h5_to_proj(filename):
     print("Reading: ", filename)
     h5_data = h5_file.get('Data')
     h5_array = np.array(h5_data)
-    max_projection = np.max(h5_array, axis = 0)
+    if z_start != z_end:
+        max_projection = np.max(h5_array, axis = 0)
+    else:
+        max_projection = h5_array[z_start]
     return max_projection
 
 #%% process the list of .h5 files

@@ -24,12 +24,18 @@ try:
 except ImportError:
     print("Install tkinter using the following command in the terminal: pip install tkinter")   
     
+try: 
+    import natsort
+except ImportError:
+    print("Install natsort using the following command in the terminal: pip install natsort")   
+
 import os
 import numpy as np
 from tifffile import imwrite
 from tkinter import Tk, filedialog
 import glob
 import time
+from natsort import natsorted
 
 #%% define input and output folder
 root = Tk()
@@ -40,26 +46,54 @@ root.attributes('-topmost', True)
 h5_folder = filedialog.askdirectory(title="Select folder containing .h5 files.")
 print("Selected directory of .h5 files: " + h5_folder + '/n')
 
+#create a list of .h5 files
+cam_name = input('What is the name of the camera? Long, Short, Left, Right, etc. ')
+cam_filename = 'Cam_' + cam_name + '_*.lux.h5'
+
 #prompt for directory to output .tif files
 output_folder = filedialog.askdirectory(title="Select folder to output .tif files.")
 print("Selected directory of .tif files: " + output_folder + '/n')
 
-#create a list of .h5 files
-cam_name = input('What is the name of the camera? Long, Short, Left, Right, etc. ')
-cam_filename = 'Cam_' + cam_name + '_*.lux.h5'
+#find .h5 files matching above filename
 h5_list = glob.glob(os.path.join(h5_folder, cam_filename))
-h5_list_len = str(len(h5_list))
-print("Number of .h5 files detected: ", h5_list_len)
+
+#sort in natural order
+h5_list = natsorted(h5_list)
 
 #name output
 output_name = input('Name the .tif output prefix: ')
 
+#report number of .h5 files found
+h5_list_len = str(len(h5_list))
+print("Number of .h5 files detected: ", h5_list_len)
+
+#slice z series
+z_start = None
+z_end = None
+slice_yn = input("Slice the Z series? y/n :")
+
+if slice_yn == 'y':
+    z_start = int(input("Type the start Z plane: "))
+    z_end = int(input("Type the end Z plane: "))
+elif slice_yn == 'n':
+    z_start = 0
+    z_end = -1
+else:
+    print("Invalid input for slicing; defaulting to Z projecting full stack.")
+    
+#keep track of time taken to create projecton
+seconds_per_frame = []
+
 #%% define h5 to numpy array function
 def h5_to_proj(filename):
     h5_file = h5py.File(filename,'r')
+    print("Reading: ", filename)
     h5_data = h5_file.get('Data')
     h5_array = np.array(h5_data)
-    max_projection = np.max(h5_array, axis = 0)
+    if z_start != z_end:
+        max_projection = np.max(h5_array, axis = 0)
+    else:
+        max_projection = h5_array[z_start]
     return max_projection
 
 #%% process the list of .h5 files
@@ -74,4 +108,21 @@ for count, item in enumerate(h5_list):
     #write file
     imwrite(tif_file_path, max_proj, photometric='minisblack')
     print('Writing: ', tif_file_path)
-    print("--- %0.3s seconds per frame ---" % (time.time() - start_time))
+    
+    #calculate time remaining
+    print("--- %0.3s s / frame ---" % (time.time() - start_time))
+    time_per_frame = (time.time() - start_time)
+    seconds_per_frame.append(time_per_frame)    
+    #wait to average 3 values
+    if len(seconds_per_frame) < 3:
+        print("...")
+    else:
+        t1 = seconds_per_frame[-1]
+        t2 = seconds_per_frame[-2]
+        t3 = seconds_per_frame[-3]
+        avg_time = (t1 + t2 + t3) / 3
+        frames_left = len(h5_list) - count
+        hours_left = (frames_left * avg_time) / 3600
+        print("~ %0.3s hours left" % hours_left)
+    
+    
