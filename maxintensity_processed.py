@@ -36,6 +36,24 @@ import glob
 import time
 from natsort import natsorted
 
+#%% welcome message
+print(""" Jan C. Frankowski, Ph.D. - Jan.Frankowski@Bruker.com
+      This script creates maximum intensity projections from a time series of 
+      luxdata .h5 files. This script is for data processed with Luxendo Data 
+      Processor. You will be prompted for:
+          - A folder containing processed .lux.h5 files.
+          - A folder to output exported .tif files.
+          - The name of the channel (eg. 0, 1, 2, etc).
+          - The name of the stack (eg. 0, 1, 2, etc).
+          - The name of the detection objective (eg. Bottom, left, etc).
+          - The name of the camera (eg. Long, left, etc).
+          - Whether to slice the Z series, if so, the start and end planes. (starting at 0).
+          
+    The script will report each file being read, the file being written, and the estimated time
+    remaining.
+      """)
+print('\n')
+
 #%% define input and output folder
 root = Tk()
 root.withdraw()
@@ -47,15 +65,15 @@ print("Selected directory of .h5 files: " + h5_folder + '/n')
 
 #prompt for directory to output .tif files
 output_folder = filedialog.askdirectory(title="Select folder to output .tif files.")
-print("Selected directory of .tif files: " + output_folder + '/n')
+print("Selected directory of .tif files: " + output_folder)
 
 #create a list of .h5 files
-ch_name = input('What is the name of the channel? 0, 1, 2, etc. ')
-st_name = input('What is the name of the stack? 0, 1, 2, etc. ')
-ob_name = input('What is the name of detection objective? Bottom, top, etc. ')
-cam_name = input('What is the name of the camera? Long, Short, Left, Right, etc. ')
+ch_name = input('What is the name of the channel? ')
+st_name = input('What is the name of the stack? ')
+ob_name = input('What is the name of detection objective? ')
+cam_name = input('What is the name of the camera? ')
 #create filename based off inputs
-filename = '*_tp-*_ch-' + ch_name + '_st-' + st_name + '_obj-' + ob_name + '_cam-' + cam_name + '_etc.lux.h5'
+filename = '*_tp-*_ch-' + ch_name + '_st-' + st_name + '*obj-' + ob_name + '_cam-' + cam_name + '_etc.lux.h5'
 #find .h5 files matching above filename
 h5_list = glob.glob(os.path.join(h5_folder, filename))
 #sort in natural order
@@ -70,7 +88,7 @@ output_name = input('Name the .tif output prefix: ')
 #slice z series
 z_start = None
 z_end = None
-slice_yn = input("Slice the Z series? y/n :")
+slice_yn = input("Slice the Z series? y/n : ")
 
 if slice_yn == 'y':
     z_start = int(input("Type the start Z plane: "))
@@ -122,6 +140,6 @@ for count, item in enumerate(h5_list):
         avg_time = (t1 + t2 + t3) / 3
         frames_left = len(h5_list) - count
         hours_left = (frames_left * avg_time) / 3600
-        print("~ %0.3s hours left" % hours_left)
+        print("~ %0.4s hours left" % hours_left)
     
     
