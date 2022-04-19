@@ -44,7 +44,7 @@ root.attributes('-topmost', True)
 
 #prompt for directory of .h5 files
 h5_folder = filedialog.askdirectory(title="Select folder containing .h5 files.")
-print("Selected directory of .h5 files: " + h5_folder + '/n')
+print("Selected directory of .h5 files: " + h5_folder)
 
 #create a list of .h5 files
 cam_name = input('What is the name of the camera? Long, Short, Left, Right, etc. ')
@@ -52,7 +52,7 @@ cam_filename = 'Cam_' + cam_name + '_*.lux.h5'
 
 #prompt for directory to output .tif files
 output_folder = filedialog.askdirectory(title="Select folder to output .tif files.")
-print("Selected directory of .tif files: " + output_folder + '/n')
+print("Selected directory of .tif files: " + output_folder)
 
 #find .h5 files matching above filename
 h5_list = glob.glob(os.path.join(h5_folder, cam_filename))
